@@ -1,0 +1,45 @@
+{
+  "current_response_keys": [
+    "boxes",
+    "proba",
+    "labels",
+    "count",
+    "backbone_label",
+    "hough_circle",
+    "backbone_label_string",
+    "preferred_e_code",
+    "preferred_l_code"
+  ],
+  "num_boxes": 323,
+  "num_heads": 8,
+  "head_names": [
+    "ALL",
+    "EC",
+    "YM",
+    "XSA",
+    "ETB",
+    "LS",
+    "LM",
+    "BC"
+  ],
+  "head_num_classes": {
+    "ALL": 1,
+    "EC": 2,
+    "YM": 2,
+    "XSA": 2,
+    "ETB": 1,
+    "LS": 1,
+    "LM": 3,
+    "BC": 1
+  },
+  "backbone_label": 3,
+  "backbone_label_string": "XSA",
+  "hough_circle": [
+    0.4935000240802765,
+    0.3762499988079071,
+    0.4399999976158142,
+    0.36666667461395264
+  ],
+  "preferred_e_code": "E10/2026",
+  "preferred_l_code": "L446502"
+}

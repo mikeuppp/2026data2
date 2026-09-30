@@ -1,0 +1,180 @@
+
+servers:
+  - url: http://localhost:8000
+    description: On-prem inference server
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Server is healthy
+  /model/version:
+    get:
+      summary: Return active model version
+      responses:
+        "200":
+          description: Active model metadata
+  /predict:
+    post:
+      summary: Run inference on one full Petri dish image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                return_uncertainty:
+                  type: boolean
+                  default: true
+                store_image:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Prediction response with boxes, labels, counts, probabilities, uncertainty scores, and review flags
+  /batch_predict:
+    post:
+      summary: Run inference on multiple images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_paths]
+              properties:
+                image_paths:
+                  type: array
+                  items:
+                    type: string
+                return_uncertainty:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Batch prediction responses
+  /uncertain_batch:
+    post:
+      summary: Rank a batch of images by active learning priority
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_paths]
+              properties:
+                image_paths:
+                  type: array
+                  items:
+                    type: string
+                top_k:
+                  type: integer
+                  default: 100
+                strategy:
+                  type: string
+                  enum:
+                    - least_confidence
+                    - entropy
+                    - margin
+                    - hybrid_uncertainty_diversity
+                  default: hybrid_uncertainty_diversity
+      responses:
+        "200":
+          description: Ranked uncertainty list
+  /feedback:
+    post:
+      summary: Receive corrected annotations from Label Studio or internal UI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackRequest"
+      responses:
+        "200":
+          description: Feedback accepted
+components:
+  schemas:
+    BoxXYWH:
+      type: array
+      items:
+        type: number
+      minItems: 4
+      maxItems: 4
+      description: Normalized [x_center, y_center, width, height].
+    Prediction:
+      type: object
+      properties:
+        box:
+          $ref: "#/components/schemas/BoxXYWH"
+        head_id:
+          type: integer
+        head_name:
+          type: string
+        label:
+          type: integer
+        label_name:
+          type: string
+        confidence:
+          type: number
+        uncertainty:
+          type: number
+        requires_review:
+          type: boolean
+    PredictResponse:
+      type: object
+      properties:
+        image_id:
+          type: string
+        backbone_label:
+          type: integer
+        backbone_label_string:
+          type: string
+        preferred_e_code:
+          type: string
+        preferred_l_code:
+          type: string
+        hough_circle:
+          type: array
+          items:
+            type: number
+        boxes:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoxXYWH"
+        predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prediction"
+        counts:
+          type: object
+        overall_uncertainty:
+          type: number
+        review_required:
+          type: boolean
+        model_version:
+          type: string
+    FeedbackRequest:
+      type: object
+      required: [image_id, corrected_predictions]
+      properties:
+        image_id:
+          type: string
+        model_version:
+          type: string
+        corrected_predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prediction"
+        annotator_id:
+          type: string
+        review_timestamp:
+          type: string
+          format: date-time
